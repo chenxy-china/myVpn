@@ -83,7 +83,17 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
 //                Toast.makeText(ButtonActivity.this,"按钮被点击了",Toast.LENGTH_SHORT).show();
                 try {
-                    testAppDisallowed();
+                    new Thread(new Runnable(){
+                        @Override
+                        public void run() {
+                            try {
+                                testAppDisallowed();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }).start();
+
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -127,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 String disallowedApps  = null;
-//                disallowedApps  = mPackageName;
+                disallowedApps  = mPackageName;
                 Log.i(TAG, "Append shell app to disallowedApps: " + disallowedApps);
 
                 try {
@@ -207,17 +217,19 @@ public class MainActivity extends AppCompatActivity {
         InetAddress toAddr = InetAddress.getByName(to);
         Socket client = new Socket();
         try {
-            Log.i(TAG, "checkTcpReflection client.connect begin ...chenxyxy...");
+            Log.i(TAG, "checkTcpReflection client.connect to :"+ to + ",port : "+ listen.getLocalPort()+"...chenxyxy...");
             client.connect(new InetSocketAddress(toAddr, listen.getLocalPort()), SOCKET_TIMEOUT_MS);
             if (expectedFrom == null) {
                 closeQuietly(listen);
                 closeQuietly(client);
                 Log.i(TAG,"Expected connection to fail, but it succeeded.");
+                return;
             }
         } catch (IOException e) {
             if (expectedFrom != null) {
                 closeQuietly(listen);
                 Log.i(TAG,"Expected connection to succeed, but it failed.");
+                return;
             } else {
                 Log.i(TAG,"We expected the connection to fail, and it did, so there's nothing more to test..");
                 // We expected the connection to fail, and it did, so there's nothing more to test.
